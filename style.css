@@ -123,13 +123,12 @@ h1 {
   }
 
   .header {
-    width: 92%;
+    width: 90%;
   }
-}
 
-@media (max-width: 400px) {
-  .middle-panel {
-    margin-top: 100px;
+  .headerimg {
+    width: 90%;
+    height: auto;
   }
 }
 
