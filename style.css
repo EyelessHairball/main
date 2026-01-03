@@ -1,0 +1,164 @@
+body {
+  margin: 0;
+  padding-left: 50px;
+  padding-right: 50px;
+  padding-bottom: 25px;
+}
+
+button {
+  background: rgba(0, 0, 0, 0);
+  border-color: rgba(0, 0, 0, 0);
+}
+
+.line {
+  width: 90%;
+  margin: 0 auto;
+  margin-bottom: 25px;
+  border-top: 1px solid #000;
+}
+
+.header {
+  border-image-slice: 26 23 24 24;
+  border-image-width: 20px 20px 20px 20px;
+  border-image-outset: 0px 0px 0px 0px;
+  border-image-repeat: stretch stretch;
+  border-image-source: url("https://github.com/EyelessHairball/images/blob/main/border.gif?raw=true");
+  border-style: solid;
+  width: 50%;
+  height: 20vh;
+  margin-bottom: 3%;
+
+  padding: 20px;
+  padding-bottom: 70px;
+
+  margin-left: auto;
+  margin-right: auto;
+  text-align: center;
+}
+
+.headerimg {
+  height: 100%;
+}
+
+p {
+  font-family: "Nintendo DS BIOS", sans-serif;
+  font-size: 25px;
+  padding-left: 5%;
+}
+
+marquee {
+  font-family: "Nintendo DS BIOS", sans-serif;
+}
+
+h1 {
+  font-family: "Nintendo DS BIOS", sans-serif;
+  padding-left: 5%;
+}
+
+.container {
+  display: flex;
+  gap: 20px;
+}
+
+.panel {
+  border-image-slice: 26 23 24 24;
+  border-image-width: 20px 20px 20px 20px;
+  border-image-outset: 0px 0px 0px 0px;
+  border-image-repeat: stretch stretch;
+  border-image-source: url("https://github.com/EyelessHairball/images/blob/main/border.gif?raw=true");
+  border-style: solid;
+
+  padding: 20px;
+}
+
+.left-panel {
+  width: 20vw;
+}
+
+.middle-panel {
+  flex: 1;
+  width: 50%;
+}
+
+.small {
+  font-size: 15px;
+}
+
+.footer {
+  width: 50%;
+  margin-top: 20px;
+  margin-left: auto;
+  margin-right: auto;
+  text-align: center;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+.header,
+.footer {
+  width: 50%;
+  width: auto;
+  max-width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+  text-align: center;
+}
+
+.right-panel {
+  width: 20vw;
+}
+
+@media (max-width: 900px) {
+  .left-panel,
+  .right-panel {
+    display: none;
+  }
+
+  .middle-panel {
+    flex: 1 1 100%;
+  }
+
+  .footer {
+    width: 100%;
+  }
+
+  .header {
+    width: 92%;
+  }
+}
+
+@media (max-width: 400px) {
+  .middle-panel {
+    margin-top: 100px;
+  }
+}
+
+.game {
+  margin-bottom: 20px;
+}
+
+.album-carousel {
+  width: 85%;
+  height: 200px;
+  position: relative;
+  margin: 0 auto;
+  user-select: none;
+  cursor: grab;
+}
+
+.album-carousel:active {
+  cursor: grabbing;
+}
+
+.album-carousel img {
+  user-select: none;
+  width: 150px;
+  height: 150px;
+  position: absolute;
+
+  left: 50%;
+  top: 50%;
+
+  transform-origin: center;
+  transition: transform 0.5s, opacity 0.5s;
+}
