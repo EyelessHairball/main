@@ -1,87 +1,83 @@
 const carousel = document.getElementById("albumCarousel");
-const images = [...carousel.querySelectorAll("img")];
+const imgs = [...carousel.querySelectorAll("img")];
 
 let angle = 0;
-let velocity = 0;
+let speed = 0;
+let radius = 0;
+let size = 0;
+let dir = 0;
 
-let baseRadius = 0;
-let imgSize = 0;
-let spinDirection = 0;
+const FRICTION = 0.96;
+const MAX_SPEED = 2;
 
-const FRICTION = 0.85;
-const MAX_VELOCITY = 2;
-
-const grabSound = new Audio(
+const grab = new Audio(
   "https://raw.githubusercontent.com/EyelessHairball/soundeffects/main/grab.wav"
 );
-const releaseSound = new Audio(
+const release = new Audio(
   "https://raw.githubusercontent.com/EyelessHairball/soundeffects/main/release.wav"
 );
-const clickSound = new Audio(
+const click = new Audio(
   "https://raw.githubusercontent.com/EyelessHairball/soundeffects/main/click.wav"
 );
 
-grabSound.volume = 0.8;
-releaseSound.volume = 0.8;
-clickSound.volume = 0.1;
+grab.volume = 0.8;
+release.volume = 0.8;
+click.volume = 0.1;
 
-[grabSound, releaseSound, clickSound].forEach((a) => (a.preload = "auto"));
+[grab, release, click].forEach((a) => (a.preload = "auto"));
 
 function updateLayout() {
-  const width = carousel.offsetWidth;
-  baseRadius = Math.max(120, Math.min(width * 0.4, 360));
-  imgSize = Math.max(70, Math.min(baseRadius * 0.45, 150));
+  const w = carousel.offsetWidth;
+  radius = Math.max(120, Math.min(w * 0.4, 360));
+  size = Math.max(70, Math.min(radius * 0.45, 150));
 
-  images.forEach((img) => {
-    img.style.width = `${imgSize}px`;
-    img.style.height = `${imgSize}px`;
+  imgs.forEach((img) => {
+    img.style.width = `${size}px`;
+    img.style.height = `${size}px`;
   });
 }
 
 window.addEventListener("resize", updateLayout);
 updateLayout();
 
-let isDragging = false;
+let dragging = false;
 let lastX = 0;
 
 function startDrag(x) {
-  isDragging = true;
+  dragging = true;
   lastX = x;
-  grabSound.currentTime = 0;
-  grabSound.play();
+  grab.currentTime = 0;
+  grab.play();
 }
 
 function drag(x) {
-  if (!isDragging) return;
+  if (!dragging) return;
 
   const dx = x - lastX;
   lastX = x;
-
   if (dx === 0) return;
 
   const inputDir = Math.sign(dx);
 
-  if (spinDirection === 0) {
-    spinDirection = inputDir;
-  }
+  if (dir === 0) dir = inputDir;
 
-  if (inputDir === spinDirection) {
-    velocity += Math.abs(dx) * 0.015 * spinDirection;
+  if (inputDir === dir) {
+    speed += Math.abs(dx) * 0.015 * dir;
   } else {
-    velocity *= 0.6;
+    speed *= 0.6;
   }
 
-  velocity = Math.max(-MAX_VELOCITY, Math.min(MAX_VELOCITY, velocity));
+  speed = Math.max(-MAX_SPEED, Math.min(MAX_SPEED, speed));
 }
 
 function endDrag() {
-  if (!isDragging) return;
-  isDragging = false;
-  spinDirection = 0;
-
-  releaseSound.currentTime = 0;
-  releaseSound.play();
+  if (!dragging) return;
+  dragging = false;
+  dir = 0;
+  release.currentTime = 0;
+  release.play();
 }
+
 carousel.addEventListener("mousedown", (e) => startDrag(e.clientX));
 window.addEventListener("mousemove", (e) => drag(e.clientX));
 window.addEventListener("mouseup", endDrag);
@@ -93,47 +89,34 @@ carousel.addEventListener("touchmove", (e) => {
 });
 carousel.addEventListener("touchend", endDrag);
 
-carousel.addEventListener(
-  "wheel",
-  (e) => {
-    e.preventDefault();
-  },
-  { passive: false }
-);
-
-const CLICK_STEP = 18;
-let lastClickIndex = 0;
+const STEP = 18;
+let lastClick = 0;
 
 function render() {
-  const n = images.length;
-  angle = (angle + velocity) % 360;
+  const n = imgs.length;
+  angle = (angle + speed) % 360;
 
-  const speed = Math.abs(velocity);
-  const dynamicRadius = baseRadius + Math.min(speed * 120, baseRadius * 0.6);
+  const s = Math.abs(speed);
+  const dynRadius = radius + Math.min(s * 120, radius * 0.6);
 
-  const clickIndex = Math.floor(angle / CLICK_STEP);
-  if (clickIndex !== lastClickIndex && speed > 0.05) {
-    clickSound.currentTime = 0;
-    clickSound.play();
-    lastClickIndex = clickIndex;
+  const clickIndex = Math.floor(angle / STEP);
+  if (clickIndex !== lastClick && s > 0.05) {
+    click.currentTime = 0;
+    click.play();
+    lastClick = clickIndex;
   }
 
-  images.forEach((img, i) => {
+  imgs.forEach((img, i) => {
     const theta = (((i / n) * 360 + angle) * Math.PI) / 180;
-    const x = Math.sin(theta) * dynamicRadius;
+    const x = Math.sin(theta) * dynRadius;
     const depth = (Math.cos(theta) + 1) * 0.5;
     const scale = 0.7 + depth * 0.3;
 
-    img.style.transform = `
-      translate(-50%, -50%)
-      translateX(${x}px)
-      scale(${scale})
-    `;
-
+    img.style.transform = `translate(-50%, -50%) translateX(${x}px) scale(${scale})`;
     img.style.zIndex = Math.round(depth * 1000);
   });
 
-  velocity *= FRICTION;
+  speed *= FRICTION;
   requestAnimationFrame(render);
 }
 
