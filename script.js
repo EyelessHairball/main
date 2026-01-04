@@ -8,7 +8,7 @@ let size = 0;
 let dir = 0;
 
 const FRICTION = 0.96;
-const MAX_SPEED = 2;
+const MAX_SPEED = 0.7;
 
 const grab = new Audio(
   "https://raw.githubusercontent.com/EyelessHairball/soundeffects/main/grab.wav"
@@ -89,7 +89,7 @@ carousel.addEventListener("touchmove", (e) => {
 });
 carousel.addEventListener("touchend", endDrag);
 
-const STEP = 18;
+const STEP = 8;
 let lastClick = 0;
 
 function render() {
