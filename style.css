@@ -17,6 +17,12 @@ button {
   border-top: 1px solid #000;
 }
 
+.radio,
+#phys {
+  margin: 10px 25%;
+  width: 50%;
+}
+
 .header {
   border-image-slice: 26 23 24 24;
   border-image-width: 20px 20px 20px 20px;
@@ -71,6 +77,16 @@ h1 {
   padding: 20px;
 }
 
+.tooltip {
+  position: absolute;
+  padding: 15px;
+  background: rgba(20, 20, 20, 0.5);
+  font-family: "Nintendo DS BIOS", sans-serif;
+  color: white;
+  display: none;
+  z-index: 9000;
+}
+
 .left-panel {
   width: 20vw;
 }
@@ -123,12 +139,13 @@ h1 {
   }
 
   .header {
-    width: 90%;
+    width: 92%;
   }
+}
 
-  .headerimg {
-    width: 90%;
-    height: auto;
+@media (max-width: 400px) {
+  .middle-panel {
+    margin-top: 100px;
   }
 }
 
