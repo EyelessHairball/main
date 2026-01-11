@@ -1,5 +1,6 @@
 const carousel = document.getElementById("albumCarousel");
 const imgs = [...carousel.querySelectorAll("img")];
+const IS_MOBILE = matchMedia("(pointer: coarse)").matches;
 
 let angle = 0;
 let vel = 0;
@@ -7,8 +8,10 @@ let radius = 0;
 let size = 0;
 let spin = 0;
 
-const FRICTION = 0.85;
-const MAX = 1;
+const FRICTION = IS_MOBILE ? 0.92 : 0.85;
+const MAX = IS_MOBILE ? 0.55 : 1;
+
+const TOUCH_SENS = IS_MOBILE ? 0.006 : 0.015;
 
 const grab = new Audio(
   "https://raw.githubusercontent.com/EyelessHairball/soundeffects/main/grab.wav"
@@ -27,8 +30,14 @@ const click = new Audio(
 
 function layout() {
   const w = carousel.offsetWidth;
-  radius = Math.max(120, Math.min(w * 0.4, 360));
-  size = Math.max(70, Math.min(radius * 0.45, 150));
+
+  if (IS_MOBILE) {
+    radius = Math.max(100, Math.min(w * 0.33, 240));
+    size = Math.max(60, Math.min(radius * 0.38, 110));
+  } else {
+    radius = Math.max(120, Math.min(w * 0.4, 360));
+    size = Math.max(70, Math.min(radius * 0.45, 150));
+  }
 
   imgs.forEach((i) => {
     i.style.width = size + "px";
@@ -60,8 +69,14 @@ function move(x) {
   const dir = Math.sign(dx);
   if (!spin) spin = dir;
 
-  if (dir === spin) vel += Math.abs(dx) * 0.015 * spin;
-  else vel *= 0.6;
+  let delta = Math.abs(dx) * TOUCH_SENS;
+
+  if (IS_MOBILE) {
+    delta = Math.min(delta, 0.04);
+  }
+
+  if (dir === spin) vel += delta * spin;
+  else vel *= 0.7;
 
   vel = Math.max(-MAX, Math.min(MAX, vel));
 }
@@ -78,7 +93,15 @@ carousel.addEventListener("mousedown", (e) => start(e.clientX));
 window.addEventListener("mousemove", (e) => move(e.clientX));
 window.addEventListener("mouseup", end);
 
-carousel.addEventListener("touchstart", (e) => start(e.touches[0].clientX));
+carousel.addEventListener(
+  "touchstart",
+  (e) => {
+    start(e.touches[0].clientX);
+    e.preventDefault();
+  },
+  { passive: false }
+);
+
 carousel.addEventListener("touchmove", (e) => {
   move(e.touches[0].clientX);
   e.preventDefault();
@@ -108,7 +131,7 @@ function render() {
     const t = (((i / imgs.length) * 360 + angle) * Math.PI) / 180;
     const x = Math.sin(t) * r;
     const d = (Math.cos(t) + 1) * 0.5;
-    const s = 0.7 + d * 0.3;
+    const s = IS_MOBILE ? 0.8 + d * 0.15 : 0.7 + d * 0.3;
 
     img.style.transform = `
       translate(-50%, -50%)
