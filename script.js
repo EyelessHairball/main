@@ -9,7 +9,7 @@ let size = 0;
 let spin = 0;
 
 const FRICTION = IS_MOBILE ? 0.92 : 0.85;
-const MAX = IS_MOBILE ? 0.55 : 1;
+const MAX = IS_MOBILE ? 4 : 1;
 
 const TOUCH_SENS = IS_MOBILE ? 0.006 : 0.015;
 
