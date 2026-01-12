@@ -1,1 +1,127 @@
-(function(){const container=document.getElementById('discord-status-widget');const style=document.createElement('style');style.textContent=`#discord-status-widget{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:#2f3136;border-radius:8px;padding:20px;max-width:400px;width:100%;color:#dcddde;box-sizing:border-box}#discord-status-widget .user-header{display:flex;align-items:center;gap:12px;margin-bottom:16px}#discord-status-widget .avatar-container{position:relative}#discord-status-widget .avatar{width:60px;height:60px;border-radius:50%}#discord-status-widget .status-indicator{position:absolute;bottom:0;right:0;width:18px;height:18px;border-radius:50%;border:3px solid #2f3136}#discord-status-widget .status-online{background:#23a559}#discord-status-widget .status-idle{background:#f0b232}#discord-status-widget .status-dnd{background:#f23f43}#discord-status-widget .status-offline{background:#80848e}#discord-status-widget .user-info h2{margin:0;font-size:18px;color:#fff}#discord-status-widget .username{margin:0;font-size:14px;color:#b9bbbe}#discord-status-widget .activity{background:#202225;border-radius:6px;padding:12px;margin-bottom:10px}#discord-status-widget .activity:last-child{margin-bottom:0}#discord-status-widget .activity-header{font-weight:600;font-size:12px;text-transform:uppercase;color:#b9bbbe;margin-bottom:8px}#discord-status-widget .activity-content{display:flex;align-items:center;gap:12px}#discord-status-widget .activity-image{width:60px;height:60px;border-radius:8px;flex-shrink:0}#discord-status-widget .activity-details{flex:1;min-width:0}#discord-status-widget .activity-name{font-weight:600;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}#discord-status-widget .activity-state,#discord-status-widget .activity-details-text{font-size:14px;color:#b9bbbe;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}#discord-status-widget .custom-status{display:flex;align-items:center;gap:8px;font-size:14px}#discord-status-widget .custom-emoji{font-size:20px}#discord-status-widget .loading{text-align:center;color:#b9bbbe}#discord-status-widget .error{color:#f23f43;text-align:center}`;document.head.appendChild(style);const DISCORD_ID='1311387282460119100';const API_URL=`https://api.lanyard.rest/v1/users/${DISCORD_ID}`;async function fetchDiscordStatus(){try{const response=await fetch(API_URL);const data=await response.json();if(data.success){renderWidget(data.data)}else{showError('Failed to load Discord status')}}catch(error){showError('Error connecting to Discord');console.error(error)}}function renderWidget(data){const{discord_user,discord_status,activities}=data;const statusClass=`status-${discord_status}`;const avatarUrl=`https://cdn.discordapp.com/avatars/${discord_user.id}/${discord_user.avatar}.png?size=128`;let html=`<div class="user-header"><div class="avatar-container"><img src="${avatarUrl}" alt="Avatar" class="avatar"><div class="status-indicator ${statusClass}"></div></div><div class="user-info"><h2>${discord_user.display_name}</h2><p class="username">@${discord_user.username}</p></div></div>`;if(activities&&activities.length>0){activities.forEach(activity=>{html+=renderActivity(activity)})}container.innerHTML=html}function renderActivity(activity){if(activity.type===4){return`<div class="activity"><div class="custom-status">${activity.emoji?`<span class="custom-emoji">${activity.emoji.name}</span>`:''}  <span>${activity.state||''}</span></div></div>`}const typeLabels={0:'Playing',2:'Listening to',3:'Watching'};const label=typeLabels[activity.type]||'Activity';const largeImage=activity.assets?.large_image?activity.assets.large_image.startsWith('mp:')?activity.assets.large_image.replace('mp:','https://media.discordapp.net/'):`https://cdn.discordapp.com/app-assets/${activity.application_id}/${activity.assets.large_image}.png`:'';return`<div class="activity"><div class="activity-header">${label} ${activity.name}</div><div class="activity-content">${largeImage?`<img src="${largeImage}" alt="${activity.name}" class="activity-image">`:''}<div class="activity-details">${activity.details?`<div class="activity-name">${activity.details}</div>`:''}${activity.state?`<div class="activity-state">${activity.state}</div>`:''}</div></div></div>`}function showError(message){container.innerHTML=`<div class="error">${message}</div>`}container.innerHTML='<div class="loading">Loading Discord status...</div>';fetchDiscordStatus();setInterval(fetchDiscordStatus,30000)})();
+(function () {
+  const DISCORD_ID = "1311387282460119100";
+  const WS_URL = "wss://api.lanyard.rest/socket";
+  const container = document.getElementById("discord-status-widget");
+
+  if (!container) return;
+
+  const style = document.createElement("style");
+  style.textContent = `
+    body{background:#202225;display:flex;justify-content:center;align-items:center;min-height:100vh;margin:0;padding:20px}
+    #discord-status-widget{background:#2f3136;font-family:"Segoe UI",Tahoma,Geneva,Verdana,sans-serif;border-radius:8px;padding:20px;max-width:400px;width:100%;color:#dcddde;box-sizing:border-box}
+    .user-header{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+    .avatar-container{position:relative}
+    .avatar{width:60px;height:60px;border-radius:50%}
+    .status-indicator{position:absolute;bottom:0;right:0;width:18px;height:18px;border-radius:50%;border:3px solid #2f3136}
+    .status-online{background:#23a559}
+    .status-idle{background:#f0b232}
+    .status-dnd{background:#f23f43}
+    .status-offline{background:#80848e}
+    .user-info h2{margin:0;font-size:18px;color:#fff}
+    .username{margin:0;font-size:14px;color:#b9bbbe}
+    .activity{background:#202225;border-radius:6px;padding:12px;margin-bottom:10px}
+    .activity:last-child{margin-bottom:0}
+    .activity-header{font-weight:600;font-size:12px;text-transform:uppercase;color:#b9bbbe;margin-bottom:8px}
+    .activity-content{display:flex;align-items:center;gap:12px}
+    .activity-image{width:60px;height:60px;border-radius:8px;flex-shrink:0}
+    .activity-details{flex:1;min-width:0}
+    .activity-name{font-weight:600;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .activity-state{font-size:14px;color:#b9bbbe;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .custom-status{display:flex;align-items:center;gap:8px;font-size:14px}
+    .custom-emoji{font-size:20px}
+    .loading{text-align:center;color:#b9bbbe}
+    .error{color:#f23f43;text-align:center}
+  `;
+  document.head.appendChild(style);
+
+  container.innerHTML = `<div class="loading">Loading…</div>`;
+
+  let socket;
+  let lastHTML = "";
+
+  function connect() {
+    socket = new WebSocket(WS_URL);
+
+    socket.onopen = () => {
+      socket.send(JSON.stringify({
+        op: 2,
+        d: { subscribe_to_id: DISCORD_ID }
+      }));
+    };
+
+    socket.onmessage = (e) => {
+      const msg = JSON.parse(e.data);
+      if (msg.op === 0 && (msg.t === "INIT_STATE" || msg.t === "PRESENCE_UPDATE")) {
+        render(msg.d);
+      }
+    };
+
+    socket.onclose = () => setTimeout(connect, 3000);
+    socket.onerror = () => socket.close();
+  }
+
+  function render(data) {
+    const { discord_user, discord_status, activities } = data;
+
+    const avatar = discord_user.avatar
+      ? `https://cdn.discordapp.com/avatars/${discord_user.id}/${discord_user.avatar}.png?size=128`
+      : `https://cdn.discordapp.com/embed/avatars/0.png`;
+
+    let html = `
+      <div class="user-header">
+        <div class="avatar-container">
+          <img class="avatar" src="${avatar}">
+          <div class="status-indicator status-${discord_status}"></div>
+        </div>
+        <div class="user-info">
+          <h2>${discord_user.display_name || discord_user.username}</h2>
+          <p class="username">@${discord_user.username}</p>
+        </div>
+      </div>
+    `;
+
+    if (activities?.length) {
+      activities.forEach(a => html += activityHTML(a));
+    }
+
+    if (html !== lastHTML) {
+      lastHTML = html;
+      container.innerHTML = html;
+    }
+  }
+
+  function activityHTML(a) {
+    if (a.type === 4) {
+      return `
+        <div class="activity">
+          <div class="custom-status">
+            ${a.emoji ? `<span class="custom-emoji">${a.emoji.name}</span>` : ""}
+            <span>${a.state || ""}</span>
+          </div>
+        </div>
+      `;
+    }
+
+    const labels = { 0: "Playing", 2: "Listening to", 3: "Watching" };
+    const img = a.assets?.large_image
+      ? a.assets.large_image.startsWith("mp:")
+        ? a.assets.large_image.replace("mp:", "https://media.discordapp.net/")
+        : `https://cdn.discordapp.com/app-assets/${a.application_id}/${a.assets.large_image}.png`
+      : "";
+
+    return `
+      <div class="activity">
+        <div class="activity-header">${labels[a.type] || "Activity"} ${a.name}</div>
+        <div class="activity-content">
+          ${img ? `<img class="activity-image" src="${img}">` : ""}
+          <div class="activity-details">
+            ${a.details ? `<div class="activity-name">${a.details}</div>` : ""}
+            ${a.state ? `<div class="activity-state">${a.state}</div>` : ""}
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  connect();
+})();
