@@ -1,64 +1,176 @@
 <html>
+
 <head>
   <meta charset="utf-8">
-  <title>directory</title>
-  <style>
-    body {
-      font-family: monospace;
-      padding: 20px;
-    }
-
-    .item {
-      display: block;
-      margin: 2px 0;
-    }
-
-    .dir {
-      font-weight: bold;
-    }
-  </style>
+  <title>Directory</title>
 </head>
-<body>
-  <h1>Directory</h1>
-  <div id="files">Loading...</div>
 
+<style>
+  body {
+    font-family: Arial, Verdana, sans-serif;
+    background: white;
+    color: #000000;
+    padding: 20px;
+    margin: 0;
+  }
+
+  h1 {
+    text-align: center;
+    color: #ffffff;
+    font-weight: bold;
+    font-size: 20px;
+    margin-bottom: 20px;
+    text-shadow: 1px 1px 0px #000000;
+    background: linear-gradient(180deg, #6da2d0 0%, #3681c5 100%);
+    padding: 10px;
+    border: 1px solid #7cb7e3;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3);
+    max-width: 100%;
+    margin: 0 auto 20px auto;
+  }
+
+  #files {
+    max-width: 100%;
+    margin: 0 auto;
+    border: 1px solid #b3b3b3;
+    background: #f4f4f4;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+  }
+
+  .item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 12px;
+    border-bottom: 1px solid #d4d4d4;
+    background: #ffffff;
+  }
+
+  .item:nth-child(even) {
+    background: #edf2f6;
+  }
+
+  .item:last-child {
+    border-bottom: none;
+  }
+
+  .item:hover {
+    background: #fef9e7;
+  }
+
+  a {
+    color: #1f66a8;
+    text-decoration: none;
+    font-size: 12px;
+    font-weight: normal;
+  }
+
+  a:hover {
+    text-decoration: underline;
+    color: #ff6600;
+  }
+
+  a:visited {
+    color: #551a8b;
+  }
+
+  .dir {
+    font-weight: bold;
+    color: #1f66a8;
+  }
+
+  .raw-link {
+    color: #1f66a8;
+    font-size: 11px;
+    margin-left: 10px;
+    text-decoration: none;
+    padding: 3px 8px;
+    background: #ffffff;
+    border: 1px solid #c0c0c0;
+    font-weight: normal;
+  }
+
+  .raw-link:hover {
+    background: #e8f0f8;
+    text-decoration: underline;
+  }
+
+  .icon {
+    margin-right: 8px;
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .icon img {
+    width: 16px;
+    height: 16px;
+    vertical-align: middle;
+  }
+
+  .left {
+    display: flex;
+    align-items: center;
+  }
+</style>
+
+<body>
+  <div id="files">Loading...</div>
   <script>
     const user = "EyelessHairball";
     const repo = "main";
-
     async function listDir(path, container, indent = 0) {
       const res = await fetch(
         `https://api.github.com/repos/${user}/${repo}/contents/${path}`
       );
       const data = await res.json();
-
       for (const file of data) {
         const line = document.createElement("div");
         line.className = "item";
-        line.style.paddingLeft = indent + "px";
-
-        const link = document.createElement("a");
-
-        link.href = "/" + file.path;
-
-        link.textContent = file.name + (file.type === "dir" ? "/" : "");
+        const left = document.createElement("div");
+        left.className = "left";
+        left.style.paddingLeft = indent + "px";
+        const right = document.createElement("div");
+        const icon = document.createElement("span");
+        icon.className = "icon";
+        const img = document.createElement("img");
         if (file.type === "dir") {
-          link.className = "dir";
+          img.src = "https://i.ibb.co/wrPKVgwH/folder.png";
+          img.alt = "folder";
+        } else {
+          img.src = "https://i.ibb.co/L4QW6YC/tag.png";
+          img.alt = "file";
         }
-
-        line.appendChild(link);
+        icon.appendChild(img);
+        const link = document.createElement("a");
+        let href = "/" + file.path;
+        if (file.name.toLowerCase() === "index.html") {
+          href = "/" + (path ? path : "");
+        }
+        link.href = href;
+        link.textContent = file.name + (file.type === "dir" ? "/" : "");
+        if (file.type === "dir") link.className = "dir";
+        left.appendChild(icon);
+        left.appendChild(link);
+        line.appendChild(left);
+        if (file.type !== "dir") {
+          const rawLink = document.createElement("a");
+          rawLink.href = file.download_url;
+          rawLink.textContent = "[view raw]";
+          rawLink.className = "raw-link";
+          rawLink.target = "_blank";
+          right.appendChild(rawLink);
+        }
+        line.appendChild(right);
         container.appendChild(line);
-
         if (file.type === "dir") {
           await listDir(file.path, container, indent + 20);
         }
       }
     }
-
     const root = document.getElementById("files");
     root.innerHTML = "";
-
     listDir("", root);
   </script>
 </body>
+
 </html>
