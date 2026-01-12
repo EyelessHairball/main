@@ -1,361 +1,231 @@
-const carousel = document.getElementById("albumCarousel");
-const imgs = [...carousel.querySelectorAll("img")];
-const IS_MOBILE = matchMedia("(pointer: coarse)").matches;
+const gameContainer = document.getElementById("gameContainer");
+const bird = document.getElementById("bird");
+const startButton = document.getElementById("startButton");
+const scoreLabel = document.getElementById("scoreLabel");
 
-let angle = 0;
-let vel = 0;
-let radius = 0;
-let size = 0;
-let spin = 0;
-
-const FRICTION = IS_MOBILE ? 0.92 : 0.85;
-const MAX = IS_MOBILE ? 4 : 1;
-
-const TOUCH_SENS = IS_MOBILE ? 0.006 : 0.015;
-
-const grab = new Audio(
-  "https://raw.githubusercontent.com/EyelessHairball/soundeffects/main/grab.wav"
-);
-const release = new Audio(
-  "https://raw.githubusercontent.com/EyelessHairball/soundeffects/main/release.wav"
-);
-const click = new Audio(
-  "https://raw.githubusercontent.com/EyelessHairball/soundeffects/main/click.wav"
+const sound25Points = new Audio(
+  "https://raw.githubusercontent.com/EyelessHairball/soundeffects/main/25points.ogg"
 );
 
-[grab, release, click].forEach((a) => {
-  a.preload = "auto";
-  a.volume = 0.6;
-});
+const soundPoint = new Audio(
+  "https://raw.githubusercontent.com/EyelessHairball/soundeffects/main/Point.ogg"
+);
 
-function layout() {
-  const w = carousel.offsetWidth;
+const soundHurt = new Audio(
+  "https://raw.githubusercontent.com/EyelessHairball/soundeffects/main/Hurt.ogg"
+);
 
-  if (IS_MOBILE) {
-    radius = Math.max(100, Math.min(w * 0.33, 240));
-    size = Math.max(60, Math.min(radius * 0.38, 110));
+const soundJump = new Audio(
+  "https://raw.githubusercontent.com/EyelessHairball/soundeffects/main/Jump.ogg"
+);
+
+let pipes = [];
+let isPlaying = false;
+let canRestart = false;
+let score = 0;
+let highscore = 0;
+let gravity = 0.001;
+let flapPower = -0.02;
+let velocity = 0;
+let birdYScale = 0.5;
+let pipeSpawnTime = 2000;
+let pipeSpeed = 0.01;
+let justFlapped = false;
+let lastTime = 0;
+let timeSincePipe = 0;
+let lastPipeSpawn = 0;
+
+function loadHighscore() {
+  const saved = localStorage.getItem("flappyBirdHighscore");
+  if (saved) {
+    highscore = parseInt(saved);
+  }
+}
+
+function saveHighscore(newScore) {
+  if (newScore > highscore) {
+    highscore = newScore;
+    localStorage.setItem("flappyBirdHighscore", highscore);
+  }
+}
+
+function playSound(audio) {
+  // Clone the audio to allow overlapping sounds
+  const sound = audio.cloneNode();
+  sound.play().catch((err) => console.log("Audio play failed:", err));
+}
+
+function spawnPipe() {
+  const frameHeight = gameContainer.clientHeight;
+  const pipeGap = frameHeight * 0.5;
+  const topHeight = Math.random() * (frameHeight * 0.4) + frameHeight * 0.15;
+
+  const topPipe = document.createElement("div");
+  topPipe.className = "pipe";
+  topPipe.style.height = topHeight + "px";
+  topPipe.style.width = "50px";
+  topPipe.style.left = "100%";
+  topPipe.style.top = "0";
+
+  const bottomPipe = document.createElement("div");
+  bottomPipe.className = "pipe";
+  bottomPipe.style.height = frameHeight - topHeight - pipeGap + "px";
+  bottomPipe.style.width = "50px";
+  bottomPipe.style.left = "100%";
+  bottomPipe.style.top = topHeight + pipeGap + "px";
+
+  gameContainer.appendChild(topPipe);
+  gameContainer.appendChild(bottomPipe);
+
+  pipes.push({ top: topPipe, bottom: bottomPipe, scored: false });
+}
+
+function resetGame() {
+  pipes.forEach((pipe) => {
+    if (pipe.top.parentNode) pipe.top.remove();
+    if (pipe.bottom.parentNode) pipe.bottom.remove();
+  });
+  pipes = [];
+  birdYScale = 0.5;
+  velocity = 0;
+  score = 0;
+  scoreLabel.textContent = "Score: 0";
+  isPlaying = true;
+  canRestart = false;
+  bird.style.transform = "rotate(0deg)";
+  bird.style.top = birdYScale * 100 + "%";
+  bird.classList.remove("hidden");
+  scoreLabel.style.display = "block";
+  lastPipeSpawn = performance.now();
+}
+
+function endGame() {
+  if (isPlaying) {
+    isPlaying = false;
+    canRestart = true;
+    saveHighscore(score);
+    playSound(soundHurt);
+  }
+}
+
+function checkCollision(birdRect, pipeRect) {
+  return (
+    birdRect.left < pipeRect.right &&
+    birdRect.right > pipeRect.left &&
+    birdRect.top < pipeRect.bottom &&
+    birdRect.bottom > pipeRect.top
+  );
+}
+
+function updateGame(dt) {
+  if (!isPlaying) return;
+
+  velocity += gravity;
+  birdYScale += velocity;
+  bird.style.top = birdYScale * 100 + "%";
+
+  if (justFlapped) {
+    bird.style.transform = "rotate(-35deg)";
+    justFlapped = false;
   } else {
-    radius = Math.max(120, Math.min(w * 0.4, 360));
-    size = Math.max(70, Math.min(radius * 0.45, 150));
+    const targetRot = Math.max(-45, Math.min(90, velocity * 3000));
+    const currentRot =
+      parseFloat(bird.style.transform.replace(/[^-\d.]/g, "")) || 0;
+    const newRot = currentRot + (targetRot - currentRot) * 0.2;
+    bird.style.transform = `rotate(${newRot}deg)`;
   }
 
-  imgs.forEach((i) => {
-    i.style.width = size + "px";
-    i.style.height = size + "px";
-  });
+  if (birdYScale < 0 || birdYScale > 1) {
+    endGame();
+  }
+
+  const birdRect = bird.getBoundingClientRect();
+
+  for (let i = pipes.length - 1; i >= 0; i--) {
+    const pipe = pipes[i];
+    const currentLeft = parseFloat(pipe.top.style.left);
+    const newLeft = currentLeft - pipeSpeed * 100;
+
+    pipe.top.style.left = newLeft + "%";
+    pipe.bottom.style.left = newLeft + "%";
+
+    const topRect = pipe.top.getBoundingClientRect();
+    const bottomRect = pipe.bottom.getBoundingClientRect();
+
+    if (
+      checkCollision(birdRect, topRect) ||
+      checkCollision(birdRect, bottomRect)
+    ) {
+      endGame();
+    }
+
+    if (newLeft < -10) {
+      pipe.top.remove();
+      pipe.bottom.remove();
+      pipes.splice(i, 1);
+
+      score += 1;
+      scoreLabel.textContent = "Score: " + score;
+
+      // Play appropriate sound based on score milestone
+      if (score === 25 || score === 50 || score === 100) {
+        playSound(sound25Points);
+      } else {
+        playSound(soundPoint);
+      }
+    }
+  }
 }
 
-window.addEventListener("resize", layout);
-layout();
+function gameLoop(currentTime) {
+  const dt = currentTime - lastTime;
+  lastTime = currentTime;
 
-let dragging = false;
-let lastX = 0;
-
-function start(x) {
-  dragging = true;
-  lastX = x;
-  grab.currentTime = 0;
-  grab.play();
-}
-
-function move(x) {
-  if (!dragging) return;
-
-  const dx = x - lastX;
-  lastX = x;
-
-  if (!dx) return;
-
-  const dir = Math.sign(dx);
-  if (!spin) spin = dir;
-
-  let delta = Math.abs(dx) * TOUCH_SENS;
-
-  if (IS_MOBILE) {
-    delta = Math.min(delta, 0.04);
-  }
-
-  if (dir === spin) vel += delta * spin;
-  else vel *= 0.7;
-
-  vel = Math.max(-MAX, Math.min(MAX, vel));
-}
-
-function end() {
-  if (!dragging) return;
-  dragging = false;
-  spin = 0;
-  release.currentTime = 0;
-  release.play();
-}
-
-carousel.addEventListener("mousedown", (e) => start(e.clientX));
-window.addEventListener("mousemove", (e) => move(e.clientX));
-window.addEventListener("mouseup", end);
-
-carousel.addEventListener(
-  "touchstart",
-  (e) => {
-    start(e.touches[0].clientX);
-    e.preventDefault();
-  },
-  { passive: false }
-);
-
-carousel.addEventListener("touchmove", (e) => {
-  move(e.touches[0].clientX);
-  e.preventDefault();
-});
-carousel.addEventListener("touchend", end);
-
-carousel.addEventListener("wheel", (e) => e.preventDefault(), {
-  passive: false
-});
-
-const STEP = 18;
-let lastStep = 0;
-
-function render() {
-  angle = (angle + vel) % 360;
-  const speed = Math.abs(vel);
-  const r = radius + Math.min(speed * 120, radius * 0.6);
-
-  const step = Math.floor(angle / STEP);
-  if (step !== lastStep && speed > 0.05) {
-    click.currentTime = 0;
-    click.play();
-    lastStep = step;
-  }
-
-  imgs.forEach((img, i) => {
-    const t = (((i / imgs.length) * 360 + angle) * Math.PI) / 180;
-    const x = Math.sin(t) * r;
-    const d = (Math.cos(t) + 1) * 0.5;
-    const s = IS_MOBILE ? 0.8 + d * 0.15 : 0.7 + d * 0.3;
-
-    img.style.transform = `
-      translate(-50%, -50%)
-      translateX(${x}px)
-      scale(${s})
-    `;
-    img.style.zIndex = Math.round(d * 1000);
-  });
-
-  vel *= FRICTION;
-  requestAnimationFrame(render);
-}
-
-render();
-
-const song = new Audio(
-  "https://raw.githubusercontent.com/EyelessHairball/soundeffects/refs/heads/main/loop.mp3"
-);
-song.loop = true;
-song.volume = 0.4;
-const button = new Audio(
-  "https://raw.githubusercontent.com/EyelessHairball/soundeffects/refs/heads/main/button3.wav"
-);
-button.volume = 0.6;
-const hits = [
-  "https://raw.githubusercontent.com/EyelessHairball/soundeffects/refs/heads/main/metal/1.wav",
-  "https://raw.githubusercontent.com/EyelessHairball/soundeffects/refs/heads/main/metal/2.wav",
-  "https://raw.githubusercontent.com/EyelessHairball/soundeffects/refs/heads/main/metal/3.wav",
-  "https://raw.githubusercontent.com/EyelessHairball/soundeffects/refs/heads/main/metal/4.wav",
-  "https://raw.githubusercontent.com/EyelessHairball/soundeffects/refs/heads/main/metal/5.wav"
-].map((s) => {
-  const a = new Audio(s);
-  a.volume = 0.2;
-  return a;
-});
-
-const grb = new Audio(
-  "https://raw.githubusercontent.com/EyelessHairball/soundeffects/refs/heads/main/physcannon_pickup.wav"
-);
-grb.volume = 0.4;
-
-const drop = new Audio(
-  "https://raw.githubusercontent.com/EyelessHairball/soundeffects/refs/heads/main/physcannon_drop.wav"
-);
-drop.volume = 0.3;
-
-const hover = new Audio(
-  "https://raw.githubusercontent.com/EyelessHairball/soundeffects/refs/heads/main/hover.wav"
-);
-
-hover.volume = 0.1;
-
-function randHit(v) {
-  if (Math.abs(v) < 2) return;
-  const a = hits[Math.floor(Math.random() * hits.length)];
-  a.currentTime = 0;
-  a.play();
-}
-
-const G = 0.7,
-  B = 0.3,
-  AIR = 0.98,
-  REST = 0.3;
-document.querySelectorAll("#phys").forEach((el) => {
-  el.style.cursor = "grab";
-  let hold = false,
-    active = false;
-  let vx = 0,
-    vy = 0,
-    x = 0,
-    y = 0;
-  let px = 0,
-    py = 0,
-    w = 0,
-    h = 0;
-  let offsetX = 0,
-    offsetY = 0;
-
-  function toBody(cx, cy) {
-    const r = el.getBoundingClientRect();
-    w = r.width;
-    h = r.height;
-    document.body.appendChild(el);
-    el.style.position = "fixed";
-    el.style.width = w + "px";
-    el.style.height = h + "px";
-    el.style.zIndex = 2000;
-    el.style.margin = "0";
-    x = cx - offsetX;
-    y = cy - offsetY;
-    el.style.left = x + "px";
-    el.style.top = y + "px";
-  }
-
-  function grabObj(cx, cy) {
-    hold = true;
-    active = false;
-    const r = el.getBoundingClientRect();
-    offsetX = cx - r.left;
-    offsetY = cy - r.top;
-    px = cx;
-    py = cy;
-    vx = vy = 0;
-    toBody(cx, cy);
-    grb.play();
-  }
-
-  function dragObj(cx, cy) {
-    if (!hold) return;
-    const dx = cx - px;
-    const dy = cy - py;
-    x += dx;
-    y += dy;
-
-    const mx = innerWidth - w;
-    const my = innerHeight - h;
-    x = Math.max(0, Math.min(mx, x));
-    y = Math.max(0, Math.min(my, y));
-
-    vx = dx;
-    vy = dy;
-
-    el.style.left = x + "px";
-    el.style.top = y + "px";
-
-    px = cx;
-    py = cy;
-  }
-
-  function dropObj() {
-    if (!hold) return;
-    hold = false;
-    active = true;
-    drop.play();
-  }
-
-  el.addEventListener("mousedown", (e) => {
-    e.preventDefault();
-    grabObj(e.clientX, e.clientY);
-  });
-
-  window.addEventListener("mousemove", (e) => dragObj(e.clientX, e.clientY));
-  window.addEventListener("mouseup", (e) => {
-    e.preventDefault();
-    dropObj();
-  });
-
-  el.addEventListener("mouseenter", () =>
-    window.addEventListener("keydown", handleKey)
-  );
-  el.addEventListener("mouseleave", () =>
-    window.removeEventListener("keydown", handleKey)
-  );
-
-  function handleKey(e) {
-    if (e.key === "e" || e.key === "E") {
-      button.currentTime = 0;
-      button.play();
-      song.paused ? song.play() : song.pause();
+  if (isPlaying) {
+    if (currentTime - lastPipeSpawn > pipeSpawnTime) {
+      spawnPipe();
+      lastPipeSpawn = currentTime;
     }
   }
 
-  function tick() {
-    if (active) {
-      vy += G;
-      x += vx;
-      y += vy;
+  updateGame(dt / 1000);
+  requestAnimationFrame(gameLoop);
+}
 
-      const mx = innerWidth - w;
-      const my = innerHeight - h;
-
-      if (x < 0) {
-        x = 0;
-        vx *= -B;
-        randHit(vx);
-      }
-      if (x > mx) {
-        x = mx;
-        vx *= -B;
-        randHit(vx);
-      }
-      if (y < 0) {
-        y = 0;
-        vy *= -B;
-        randHit(vy);
-      }
-      if (y > my) {
-        y = my;
-        vy *= -B;
-        vx *= AIR;
-        randHit(vy);
-        if (Math.abs(vy) < REST) vy = 0;
-      }
-
-      vx *= AIR;
-      vy *= AIR;
-
-      el.style.left = x + "px";
-      el.style.top = y + "px";
-    }
-    requestAnimationFrame(tick);
+function handleInput() {
+  if (isPlaying) {
+    velocity = flapPower;
+    justFlapped = true;
+    playSound(soundJump);
+  } else if (canRestart) {
+    resetGame();
   }
-  tick();
+}
+
+document.addEventListener("keydown", (e) => {
+  if (e.code === "Space" || e.key === " ") {
+    e.preventDefault();
+    handleInput();
+  }
 });
 
-const tooltip = document.getElementById("tooltip");
-
-document.querySelectorAll("img[alt]").forEach((img) => {
-  img.addEventListener("mouseenter", (e) => {
-    tooltip.textContent = img.alt;
-    tooltip.style.display = "block";
-    const hover = new Audio(
-      "https://raw.githubusercontent.com/EyelessHairball/soundeffects/refs/heads/main/hover.wav"
-    );
-
-    hover.volume = 0.1;
-    hover.play();
-  });
-
-  img.addEventListener("mousemove", (e) => {
-    tooltip.style.left = e.pageX + 10 + "px";
-    tooltip.style.top = e.pageY + 10 + "px";
-  });
-  img.addEventListener("mouseleave", () => {
-    tooltip.style.display = "none";
-  });
+document.addEventListener("click", (e) => {
+  if (e.target !== startButton) {
+    handleInput();
+  }
 });
+
+document.addEventListener("touchstart", (e) => {
+  if (e.target !== startButton) {
+    e.preventDefault();
+    handleInput();
+  }
+});
+
+startButton.addEventListener("click", () => {
+  startButton.classList.add("hidden");
+  resetGame();
+});
+
+loadHighscore();
+requestAnimationFrame(gameLoop);
