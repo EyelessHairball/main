@@ -1,0 +1,77 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  user-select: none;
+}
+
+body {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background: black;
+  font-family: "Source Sans Pro", Arial, sans-serif;
+}
+
+#gameContainer {
+  position: relative;
+  width: 90vmin;
+  height: 90vmin;
+  max-width: 600px;
+  max-height: 600px;
+  background: url("https://i.ibb.co/SX7LJrGX/nyan-cat-background-by-kento1-d3l6i50-pre.jpg");
+  overflow: hidden;
+  border: 3px solid #000;
+}
+
+#bird {
+  position: absolute;
+  width: 10%;
+  aspect-ratio: 1;
+  left: 20%;
+  top: 50%;
+  transform-origin: center;
+  transition: transform 0.1s;
+}
+
+.pipe {
+  position: absolute;
+  width: 50px;
+  background: #1fb517;
+  border: 2px solid #000;
+}
+
+#startButton {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  padding: 20px 40px;
+  font-size: 24px;
+  font-weight: bold;
+  background: #fff;
+  border: 3px solid #000;
+  cursor: pointer;
+  z-index: 100;
+}
+
+#startButton:hover {
+  background: #f0f0f0;
+}
+
+#scoreLabel {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  font-size: 32px;
+  font-weight: bold;
+  color: #a3a3a3;
+  text-align: right;
+  z-index: 50;
+  display: none;
+}
+
+.hidden {
+  display: none !important;
+}
