@@ -23,6 +23,14 @@ button {
   width: 50%;
 }
 
+#__next .rounded-md {
+  border-radius: 0 !important;
+}
+
+.btn {
+  border-radius: 0 !important;
+}
+
 .header {
   border-image-slice: 26 23 24 24;
   border-image-width: 20px 20px 20px 20px;
