@@ -24,7 +24,7 @@
 
         data.forEach(file => {
           const a = document.createElement("a");
-          a.href = file.path;
+          a.href = a.href = "/" + file.path;
           a.textContent = file.name + (file.type === "dir" ? "/" : "");
           list.appendChild(a);
         });
