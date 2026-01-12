@@ -1,7 +1,7 @@
 (function () {
-  const DISCORD_ID = "1311387282460119100";
   const WS_URL = "wss://api.lanyard.rest/socket";
   const container = document.getElementById("discord-status-widget");
+  const DISCORD_ID = container.dataset.userId;
 
   if (!container) return;
 
