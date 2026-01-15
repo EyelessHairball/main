@@ -1,4 +1,5 @@
 <html>
+
 <head>
   <link href="https://fonts.cdnfonts.com/css/nintendo-ds-bios" rel="stylesheet">
   <title>Fat Rhabit</title>
@@ -14,98 +15,9 @@
   <meta property="og:description" content="my profile yayyyayyy">
   <meta name="theme-color" content="#ff0004">
   <meta name="twitter:card" content="summary_large_image">
-  <script src="script.js" defer></script>
 </head>
 
 <body>
-    <div id="loading-screen">
-  <div class="nds-overlay">
-    <h2>Loading…</h2>
-    <p id="loading-text">Initializing</p>
-
-    <div class="progress-bar">
-      <div class="progress-fill" id="progress-fill"></div>
-    </div>
-  </div>
-</div>
-
-  <style>
-      @font-face {
-  font-family: "Nds";
-  src: url("https://pipe.miroware.io/5f586dbe02740c4a7fb69f99/Personal%20Sites/Fonts/NDS12.ttf");
-}
-
-@keyframes nds-diag {
-  from {
-    background-position: bottom left;
-  }
-
-  to {
-    background-position: top right;
-  }
-}
-
-#loading-screen {
-  position: fixed;
-  inset: 0;
-  z-index: 999999;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  font-family: "Nds", sans-serif;
-  background: linear-gradient(
-      rgba(255, 255, 255, 0.4),
-      rgba(255, 255, 255, 0.4)
-    ),
-    url("https://github.com/EyelessHairball/images/blob/main/body.png?raw=true");
-  background-repeat: repeat;
-  animation: nds-diag 200s linear infinite;
-  transition: opacity 0.8s ease;
-}
-
-#loading-screen.fade-out {
-  opacity: 0;
-  pointer-events: none;
-}
-
-#loading-screen .nds-overlay {
-  background-color: rgba(0, 0, 0, 0.5);
-  padding: 50px;
-  text-align: center;
-  color: #fff;
-  max-width: 600px;
-  border: 3px solid #fff;
-  box-shadow: 0 0 2px rgba(0, 0, 0, 0.7), 0 0 0 5px rgba(255, 255, 255, 0.2);
-  border-radius: 2px;
-  text-shadow: 10px 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-#loading-screen h2 {
-  font-size: 2.5em;
-  margin: 20px 0 10px;
-}
-
-#loading-screen p {
-  font-size: 1.2em;
-  margin-bottom: 20px;
-}
-
-.progress-bar {
-  width: 100%;
-  height: 18px;
-  border: 2px solid #fff;
-  background: rgba(0, 0, 0, 0.4);
-  box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.6);
-}
-
-.progress-fill {
-  height: 100%;
-  width: 0%;
-  background: #fff;
-  transition: width 0.3s ease;
-}
-  </style>
-    
   <div id="tooltip" class="tooltip"></div>
   <div style="float:  ; max-width: 200px; height: auto; position: fixed; left: 37px; bottom: 9px; z-index: 200;"><a href="https://alturl.com/p749b"><img src="https://autism.crd.co/assets/images/gallery03/45050ba7_original.gif?v=69d6a439" alt="cat kittycat" /></a></div>
   <div class="header">
@@ -127,8 +39,8 @@
         <br>
         Discord @tacocat387
       </p>
-      <div id="discord-status-widget"></div>
-      <script src="https://cdn.jsdelivr.net/gh/EyelessHairball/main@main/discordwidget/script.js"></script>
+      <div id="discord-status-widget" data-user-id="1311387282460119100"></div>
+<script src="https://cdn.jsdelivr.net/gh/EyelessHairball/main@main/discordwidget/script.js"></script>
       <br>
       <h1> [changelog]</h1>
       <div class="line"></div>
@@ -136,6 +48,10 @@
         [01/01/26] created the website
         <br>
         [01/02/26] added album carousel
+        <br>
+        [01/04/26] added tooltips to images and radio from Portal (press E to activate)
+        <br>
+        [01/12/26] mobile fixes for carousel and header, discord status in left panel, other panel, and comments
         <br>
         thats all for now : 3
       </p>
@@ -209,12 +125,35 @@
         <br>
         untitled kristal engine mod (havent released yet)
       </p>
-      <br>
-      <h1>Other</h1>
-      <div class="line"></div>
-      <p>
-        <a href="https://fatrhabit.org/directory/">Directory</a>
-      </p>
+        <br>
+        <h1>Other</h1>
+        <div class="line"></div>
+        <p>
+          <a href="https://fatrhabit.org/directory/">Directory</a>
+          <br>
+          <a href="https://images.fatrhabit.org">Image Browser</a>
+          <br>
+          <a href="https://sounds.fatrhabit.org">Sound Browser</a>
+        </p>
+        <br>
+        <h1>Comments</h1>
+      <div class = "line"></div>
+      <script src="https://giscus.app/client.js"
+        data-repo="eyelesshairball/main"
+        data-repo-id="R_kgDOQzK0GQ"
+        data-category="General"
+        data-category-id="DIC_kwDOQzK0Gc4C02oS"
+        data-mapping="pathname"
+        data-strict="0"
+        data-reactions-enabled="1"
+        data-emit-metadata="0"
+        data-input-position="top"
+        data-theme="noborder_light"
+        data-lang="en"
+        data-loading="lazy"
+        crossorigin="anonymous"
+        async>
+</script>
     </div>
 
     <div class="panel right-panel">
