@@ -98,6 +98,143 @@ button {
   width: 50%;
 }
 
+.discord-widget {
+        background: #2f3136;
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif !important;
+        border-radius: 8px;
+        padding: 20px;
+        max-width: 400px;
+        width: 100%;
+        color: #dcddde;
+      }
+      
+      .user-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 16px;
+      }
+      
+      .avatar-container {
+        position: relative;
+      }
+      
+      .avatar {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+      }
+      
+      .status-indicator {
+        position: absolute;
+        bottom: 0;
+        right: 0;
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        border: 3px solid #2f3136;
+      }
+      
+      .status-online {
+        background: #23a559;
+      }
+      .status-idle {
+        background: #f0b232;
+      }
+      .status-dnd {
+        background: #f23f43;
+      }
+      .status-offline {
+        background: #80848e;
+      }
+      
+      .user-info h2 {
+        margin: 0;
+        font-size: 18px;
+        color: #fff;
+      }
+      
+      .username {
+        margin: 0;
+        font-size: 14px;
+        color: #b9bbbe;
+      }
+      
+      .activity {
+        background: #202225;
+        border-radius: 6px;
+        padding: 12px;
+        margin-bottom: 10px;
+      }
+      
+      .activity:last-child {
+        margin-bottom: 0;
+      }
+      
+      .activity-header {
+        font-weight: 600;
+        font-size: 12px;
+        text-transform: uppercase;
+        color: #b9bbbe;
+        margin-bottom: 8px;
+      }
+      
+      .activity-content {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      
+      .activity-image {
+        width: 60px;
+        height: 60px;
+        border-radius: 8px;
+        flex-shrink: 0;
+      }
+      
+      .activity-details {
+        flex: 1;
+        min-width: 0;
+      }
+      
+      .activity-name {
+        font-weight: 600;
+        margin-bottom: 2px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      
+      .activity-state,
+      .activity-details-text {
+        font-size: 14px;
+        color: #b9bbbe;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      
+      .custom-status {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 14px;
+      }
+      
+      .custom-emoji {
+        font-size: 20px;
+      }
+      
+      .loading {
+        text-align: center;
+        color: #b9bbbe;
+      }
+      
+      .error {
+        color: #f23f43;
+        text-align: center;
+      }
+
 .header {
   border-image-slice: 26 23 24 24;
   border-image-width: 20px 20px 20px 20px;
