@@ -13,7 +13,6 @@
         border-radius: 8px;
         padding: 20px;
         max-width: 400px;
-        width: 100%;
         color: #dcddde;
       }
       
