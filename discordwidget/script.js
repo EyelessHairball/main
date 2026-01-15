@@ -7,7 +7,7 @@
 
   const style = document.createElement("style");
   style.textContent = `
-      .discord-widget {
+      .discord-widget, #discord-status-widget {
         background: #2f3136;
         font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif !important;
         border-radius: 8px;
