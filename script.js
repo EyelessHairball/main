@@ -1,3 +1,37 @@
+(() => {
+  const screen = document.getElementById("loading-screen");
+  const bar = document.getElementById("progress-fill");
+  const text = document.getElementById("loading-text");
+
+  let progress = 0;
+
+  const steps = ["Loading assets", "Preparing interface", "Finalizing"];
+
+  const interval = setInterval(() => {
+    progress += Math.random() * 15;
+    if (progress >= 100) progress = 100;
+
+    bar.style.width = progress + "%";
+    text.textContent =
+      steps[Math.min(steps.length - 1, Math.floor(progress / 34))];
+
+    if (progress === 100) {
+      clearInterval(interval);
+
+      setTimeout(() => {
+        screen.classList.add("fade-out");
+        setTimeout(() => screen.remove(), 800);
+      }, 400);
+    }
+  }, 300);
+
+  window.addEventListener("load", () => {
+    progress = 100;
+  });
+})();
+
+
+
 const carousel = document.getElementById("albumCarousel");
 const imgs = [...carousel.querySelectorAll("img")];
 const IS_MOBILE = matchMedia("(pointer: coarse)").matches;
@@ -359,35 +393,3 @@ document.querySelectorAll("img[alt]").forEach((img) => {
     tooltip.style.display = "none";
   });
 });
-
-(() => {
-  const screen = document.getElementById("loading-screen");
-  const bar = document.getElementById("progress-fill");
-  const text = document.getElementById("loading-text");
-
-  let progress = 0;
-
-  const steps = ["Loading assets", "Preparing interface", "Finalizing"];
-
-  const interval = setInterval(() => {
-    progress += Math.random() * 15;
-    if (progress >= 100) progress = 100;
-
-    bar.style.width = progress + "%";
-    text.textContent =
-      steps[Math.min(steps.length - 1, Math.floor(progress / 34))];
-
-    if (progress === 100) {
-      clearInterval(interval);
-
-      setTimeout(() => {
-        screen.classList.add("fade-out");
-        setTimeout(() => screen.remove(), 800);
-      }, 400);
-    }
-  }, 300);
-
-  window.addEventListener("load", () => {
-    progress = 100;
-  });
-})();
