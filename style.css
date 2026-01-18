@@ -194,3 +194,14 @@ h1 {
   transform-origin: center;
   transition: transform 0.5s, opacity 0.5s;
 }
+
+#deployCount {
+  font-family: "Nintendo DS BIOS", sans-serif;
+  font-size: 3rem;
+}
+
+.deploy {
+  text-align: center;
+  margin: auto;
+}
+
