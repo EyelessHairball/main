@@ -1,0 +1,32 @@
+@import url("https://fonts.cdnfonts.com/css/vcr-osd-mono");
+
+canvas {
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 1;
+  width: 100vw;
+  height: 100vh;
+}
+
+.label {
+  position: fixed;
+  left: 5px;
+  top: 5px;
+  z-index: 5;
+  background: black;
+  border: 2px solid white;
+  font-family: "VCR OSD Mono", sans-serif;
+  color: white;
+  padding: 5px;
+  font-size: 10px;
+  opacity: 0.2;
+}
+
+.label:hover {
+  opacity: 1;
+}
+
+input {
+  display: none;
+}
