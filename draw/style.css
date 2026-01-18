@@ -1,0 +1,42 @@
+.helpbutton {
+  position: fixed;
+  top: 5px;
+  left: 5px;
+  padding: 5px 10px;
+  z-index: 1000;
+}
+
+.help {
+  position: fixed;
+  top: 40px;
+  left: -10%;
+  padding: 10px;
+  background: rgba(0, 0, 0, 0.6);
+  color: white;
+  font-family: Arial;
+
+  pointer-events: none;
+  transition: 0.2s ease;
+  z-index: 10001;
+}
+
+.help.open {
+  pointer-events: auto;
+  left: 5px;
+}
+
+.help .close {
+  background: rgba(0, 0, 0, 0.6);
+  border: none;
+  color: white;
+  font-size: 14px;
+  cursor: pointer;
+  top: 5px;
+  right: 5px;
+  width: 100%;
+}
+
+canvas {
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}

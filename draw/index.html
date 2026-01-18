@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+    <meta charset="UTF-8">
+    <title>fullscreen draw</title>
+    <link rel="stylesheet" href="./style.css">
+
+  </head>
+    
+  <body>
+  <button class="helpbutton" onclick="toggleHelp()">?</button>
+
+<div class="help" id="help">
+  <button class="close" onclick="toggleHelp()">X</button>
+  <p>
+    shortcuts are<br>
+    <br>
+    ctrl + z // undo<br>
+    ctrl + y // redo<br>
+    b // brush<br>
+    e // eraser
+  </p>
+</div>
+
+<script>
+  function toggleHelp() {
+    document.getElementById("help").classList.toggle("open");
+  }
+</script>
+    <script  src="./script.js"></script>
+
+  </body>
+  
+</html>
