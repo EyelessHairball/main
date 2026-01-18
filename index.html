@@ -180,6 +180,34 @@
     </div>
 
     <div class="panel middle-panel">
+      <div class="deploy">
+        <span id="deployCount">Deployments: loading…</span>
+        <script>
+          (async () => {
+            const TOKEN = "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";
+            const USER = "EyelessHairball";
+            const REPO = "main";
+            const BRANCH = "main";
+            const res = await fetch(
+              `https://api.github.com/repos/${USER}/${REPO}/commits?sha=${BRANCH}&per_page=1`, {
+                headers: {
+                  "Accept": "application/vnd.github+json",
+                  "Authorization": `Bearer ${TOKEN}`
+                }
+              }
+            );
+            const link = res.headers.get("Link");
+            let count = 1;
+            if (link) {
+              const match = link.match(/page=(\d+)>; rel="last"/);
+              if (match) count = parseInt(match[1]);
+            }
+            document.getElementById("deployCount").textContent =
+              `Deployments: ${count}`;
+          })();
+        </script>
+      </div>
+      
       <h1>About Me</h1>
       <div class="line"></div>
 
