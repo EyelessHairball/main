@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+
+<html lang="en" >
+<head>
+  <meta charset="UTF-8">
+  <title>visualizer</title>
+  <link rel="icon" type="image/x-icon" href="https://hairlesseyeball.neocities.org/visualizer/visualizer.ico">
+  <meta property="og:title" content="Visualizer" />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://hairlesseyeball.neocities.org/visualizer/scope" />
+  <meta property="og:image" content="https://i.ibb.co/nzCHgq0/visualizer.png"/>
+  <meta property="og:description" content="visualizer made in mainly JS"/>
+  <meta name="theme-color" content="#FF0000">
+  <meta name="twitter:card" content="summary_large_image">
+  <script src="https://cdn.jsdelivr.net/npm/jsmediatags@3.9.1/dist/jsmediatags.min.js"></script>
+    <script>
+window.addEventListener("DOMContentLoaded", function () {
+  const c = document.getElementById("visualizer"),
+    ctx = c.getContext("2d"),
+    inp = document.getElementById("audioFile"),
+    pb = document.getElementById("progressBar"),
+    curr = document.getElementById("currentSong"),
+    next = document.getElementById("nextSong"),
+    ct = document.getElementById("currentTime"),
+    dt = document.getElementById("durationTime"),
+    vol = document.getElementById("volume"),
+    col = document.getElementById("color"),
+    bcol = document.getElementById("color2"),
+    pauseBtn = document.getElementById("pauseButton"),
+    strength = document.getElementById("strength"),
+    width = document.getElementById("width"),
+    hide = document.getElementById("hide"),
+    wrap = document.getElementById("wrap"),
+    tit = document.getElementById("titleBar"),
+    micToggleBtn = document.getElementById("micToggleButton");
+  
+  let ac,
+    an,
+    arr,
+    q = [],
+    src,
+    g,
+    loop = false,
+    t,
+    paused = false,
+    mouseX = -1,
+    mouseY = -1,
+    micActive = false;
+
+  const init = () => {
+    ctx.fillStyle = bcol.value;
+    ctx.strokeStyle = col.value;
+    document.body.style.background = bcol.value;
+    pb.style.accentColor = col.value;
+  };
+
+  init();
+
+  [col, bcol, vol].forEach((e) =>
+    e.addEventListener("input", () => {
+      if (e === col) ctx.strokeStyle = pb.style.accentColor = e.value;
+      if (e === bcol) ctx.fillStyle = document.body.style.background = e.value;
+      if (e === vol && g) g.gain.value = e.value;
+    })
+  );
+
+  setTimeout(function () {
+    document.getElementById("loading").style.opacity = 0;
+  }, 2000);
+
+  const resize = () => {
+    c.width = window.innerWidth;
+    c.height = window.innerHeight;
+    init();
+    ctx.fillRect(0, 0, c.width, c.height);
+  };
+
+  window.addEventListener("resize", resize);
+  resize();
+
+  window.addEventListener("mousemove", (e) => {
+    mouseX = e.clientX;
+    mouseY = e.clientY;
+  });
+
+  const draw = () => {
+    if (!an) return;
+    an.getByteTimeDomainData(arr);
+    ctx.fillRect(0, 0, c.width, c.height);
+    ctx.beginPath();
+    ctx.lineWidth = parseFloat(width.value);
+    const sw = c.width / arr.length,
+      s = parseFloat(strength.value);
+
+    arr.forEach((v, i) => {
+      const y = (((v / 128.0 - 1) * c.height) / 2) * s + c.height / 2;
+
+      const distance = Math.sqrt(
+        Math.pow(mouseX - i * sw, 2) + Math.pow(mouseY - y, 2)
+      );
+
+      const maxDistance = Math.sqrt(
+        Math.pow(c.width, 2) + Math.pow(c.height, 2)
+      );
+      const warpFactor = Math.max(0, (maxDistance - distance) / maxDistance);
+
+      const warpedY = y + warpFactor * 15;
+      i === 0 ? ctx.moveTo(0, warpedY) : ctx.lineTo(i * sw, warpedY);
+    });
+
+    ctx.stroke();
+  };
+
+  const fmtTime = (t) =>
+    isNaN(t) || t < 0
+      ? "0:00"
+      : `${Math.floor(t / 60)}:${Math.floor(t % 60)
+          .toString()
+          .padStart(2, "0")}`;
+
+  const getName = (f) =>
+    (f.name || "Unknown file").split(".").slice(0, -1).join(".") ||
+    f.name ||
+    "Unknown";
+
+  const nextMedia = async () => {
+    if (t) clearInterval(t);
+    if (!q.length) return ac && ac.close() && (ac = null);
+    const f = q.shift();
+    curr.textContent = f ? getName(f) : "No song playing";
+    next.textContent = q.length ? getName(q[0]) : "No song next";
+    if (!f.type.startsWith("audio")) return;
+    const buf = await f.arrayBuffer(),
+      dec = await ac.decodeAudioData(buf);
+    src = ac.createBufferSource();
+    src.buffer = dec;
+    an = ac.createAnalyser();
+    an.fftSize = 2048;
+    arr = new Uint8Array(an.fftSize);
+    src.connect(an).connect(g).connect(ac.destination);
+    src.onended = () => (loop ? nextMedia() : nextMedia());
+    pb.value = 0;
+    pb.max = src.buffer.duration;
+    ct.textContent = fmtTime(0);
+    src.startTime = ac.currentTime;
+    src.start();
+    dt.textContent = fmtTime(src.buffer.duration);
+    startTimer();
+  };
+
+  const startTimer = () => {
+    if (t) clearInterval(t);
+    pb.value = 0;
+    ct.textContent = fmtTime(0);
+    t = setInterval(() => {
+      if (src && src.buffer && !paused) {
+        const time = ac.currentTime - src.startTime;
+        pb.value = time;
+        ct.textContent = fmtTime(time);
+        if (time >= src.buffer.duration) clearInterval(t);
+      }
+    }, 10);
+  };
+
+  pb.addEventListener("input", () => {
+    if (src && src.buffer) {
+      const time = parseFloat(pb.value);
+      src.stop();
+      src.start(0, time);
+    }
+  });
+
+  inp.addEventListener("change", async (e) => {
+    const fs = e.target.files;
+    if (!fs.length) return;
+    if (ac) ac.close();
+    ac = new (window.AudioContext || window.webkitAudioContext)();
+    g = ac.createGain();
+    g.gain.value = vol.value;
+    q = Array.from(fs);
+    nextMedia();
+  });
+
+  pauseBtn.addEventListener("click", async () => {
+    if (!ac) return;
+    if (paused) {
+      await ac.resume();
+      paused = false;
+      pauseBtn.textContent = "P";
+    } else {
+      await ac.suspend();
+      paused = true;
+      pauseBtn.textContent = "R";
+    }
+  });
+
+  hide.addEventListener("click", function () {
+    if (wrap.style.display === "none") {
+      wrap.style.display = "grid";
+      tit.style.display = "block";
+    } else {
+      wrap.style.display = "none";
+      tit.style.display = "none";
+    }
+  });
+
+  const handleMicInput = async () => {
+    if (ac) ac.close();
+    ac = new (window.AudioContext || window.webkitAudioContext)();
+    g = ac.createGain();
+    g.gain.value = vol.value;
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const micSource = ac.createMediaStreamSource(stream);
+      an = ac.createAnalyser();
+      an.fftSize = 2048;
+      arr = new Uint8Array(an.fftSize);
+      micSource.connect(an).connect(g).connect(ac.destination);
+    } catch (err) {
+      console.error("Error accessing microphone: ", err);
+    }
+  };
+
+  micToggleBtn.addEventListener("click", async () => {
+    if (micActive) {
+      ac.close();
+      micActive = false;
+      micToggleBtn.textContent = "Start Microphone";
+    } else {
+      await handleMicInput();
+      micActive = true;
+      micToggleBtn.textContent = "Stop Microphone";
+    }
+  });
+
+  setInterval(draw, 32);
+});
+
+    </script>
+    <style>
+    
+ @import url("https://fonts.cdnfonts.com/css/vcr-osd-mono");
+* {
+  box-sizing: border-box;
+  transition: all 0.2s ease-out;
+  font-family: "VCR OSD Mono", sans-serif;
+}
+
+.loading {
+  pointer-events: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  display: inline-grid;
+  padding: 5px;
+  background: black;
+  z-index: 9999;
+  transition: opacity 1s;
+}
+
+.loader {
+  transition: opacity 5s;
+  margin: auto;
+  width: 45px;
+  aspect-ratio: 1;
+  --c: no-repeat linear-gradient(white 0 0);
+  background: var(--c) 0% 100%, var(--c) 50% 100%, var(--c) 100% 100%;
+  animation: l2 1s infinite linear;
+}
+@keyframes l2 {
+  0% {
+    background-size: 20% 100%, 20% 100%, 20% 100%;
+  }
+  20% {
+    background-size: 20% 60%, 20% 100%, 20% 100%;
+  }
+  40% {
+    background-size: 20% 80%, 20% 60%, 20% 100%;
+  }
+  60% {
+    background-size: 20% 100%, 20% 80%, 20% 60%;
+  }
+  80% {
+    background-size: 20% 100%, 20% 100%, 20% 80%;
+  }
+  100% {
+    background-size: 20% 100%, 20% 100%, 20% 100%;
+  }
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  background-color: black;
+  min-height: 100vh;
+  font-family: Arial, sans-serif;
+  overflow: hidden;
+}
+
+canvas {
+  display: block;
+  margin: 0;
+  padding: 0;
+  position: fixed;
+  top: 0;
+  left: 0;
+}
+
+#pauseButton {
+  padding: 5px;
+  padding-inline: 10px;
+  background-color: #f6a801 !important;
+  color: white !important;
+  border: none;
+  opacity: 0.6;
+  font-weight: bold;
+}
+
+#skipButton {
+  padding: 5px;
+  padding-inline: 11px;
+  background-color: black !important;
+  color: white !important;
+  border: 2px solid white;
+  opacity: 0.6;
+  font-weight: bold;
+}
+
+input[type="file"] {
+  display: none;
+}
+
+.custom {
+  border: 2px solid white;
+  background: black;
+  padding: 6px 12px;
+  cursor: pointer;
+  color: white;
+}
+
+#titleBar {
+  opacity: 0.1;
+  position: fixed;
+  left: 0px;
+  bottom: 0px;
+  margin: 0;
+  width: 100%;
+  background-color: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 10px;
+  padding-inline: 20px;
+}
+
+#titleBar:hover {
+  opacity: 1;
+}
+
+#progressBar {
+  opacity: 1 !important;
+  pointer-events: none !important;
+  cursor: text;
+  background: none;
+}
+
+.inputwrap {
+  position: fixed;
+  top: 0px;
+  left: 0px;
+  background-color: rgba(0, 0, 0, 0.8);
+  padding: 15px;
+  display: grid;
+  opacity: 0.1;
+}
+
+.inputwrap:hover {
+  opacity: 1;
+}
+
+#hide {
+  border: 2px solid white;
+  background: black;
+  padding: 6px 12px;
+  cursor: pointer;
+  color: white;
+  position: fixed;
+  bottom: 10px;
+  right: 10px;
+  z-index: 1000;
+  opacity: 0.1;
+}
+
+#hide:hover {
+  opacity: 1;
+}
+
+#select {
+  border: 2px solid white;
+  background: black;
+  padding: 6px 12px;
+  cursor: pointer;
+  color: white;
+  display: none;
+}
+
+#color,
+#color2 {
+  border: 2px solid white;
+  background: black;
+  padding: 5px;
+  cursor: pointer;
+  color: white;
+  width: 100%;
+}
+
+.slider {
+  -webkit-appearance: none;
+  width: 99%;
+  height: 25px;
+  background: black;
+  border: 2px solid white;
+  outline: none;
+  opacity: 0.9;
+  -webkit-transition: 0.2s;
+  transition: opacity 0.2s;
+}
+
+.slider:hover {
+  opacity: 1;
+}
+
+.slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 25px;
+  height: 25px;
+  background: black;
+  border: 2px solid white;
+  cursor: pointer;
+}
+
+.slider::-moz-range-thumb {
+  width: 25px;
+  height: 25px;
+  background: black;
+  border-radius: 0;
+  border: 2px solid white;
+  cursor: pointer;
+}
+
+label {
+  color: white;
+  margin: 5px;
+}
+
+#eq {
+  display: flex;
+  flex-direction: column;
+  color: white;
+}
+
+#micToggleButton,
+#systemAudioToggleButton {
+  padding: 5px;
+  border: 2px solid white;
+  background: black;
+  border-radius: 0;
+  color: white;
+  text-align: right;
+}
+
+  </style>
+</head>
+<body>
+  <div id="loading" class="loading">
+    <div id="loading-screen" class="loader">
+    </div>
+  </div>
+
+  <canvas id="visualizer"></canvas>
+  <button id="hide">Toggle UI</button>
+  <div class="inputwrap" id="wrap">
+    <label class="custom">
+      <input type="file" multiple="true" id="audioFile" />
+      Browse...
+    </label>
+    <label style="margin-top: 10px;">INTENSITY</label>
+    <input type="range" id="strength" min="0" max="2" step="0.1" value="1" name="strength" class="slider">
+    <label>VOLUME</label>
+    <input type="range" id="volume" min="0" max="1" step="0.01" value="1" class="slider">
+    <label>LINE WIDTH</label>
+    <input type="range" id="width" min="0" max="10" step="0.01" value="2" class="slider">
+    <label>WAVE COLOR
+      <input type="color" id="color" value="#1DB954" />
+    </label>
+    <label>BACKGROUND COLOR
+      <input type="color" id="color2" value="black" />
+    </label>
+    <label> MICROPHONE
+      <button id="micToggleButton">Start Microphone</button>
+    </label>
+    <!-- <button id="loopButton">Loop: OFF</button> -->
+  </div>
+  <div id="titleBar">
+    <span id="currentSong">No song playing</span>
+    //
+    <span id="nextSong">No song next</span>
+    <div id="progressContainer">
+      <!-- <button id = "skipButton">S</button> -->
+      <span id="currentTime">0:00</span>
+      <input type="range" id="progressBar" value="0" max="100" step="1" style="accent-color: #1DB954;" />
+      <span id="durationTime">0:00</span>
+      <button id="pauseButton">P</button>
+    </div>
+  </div>
+</body>
+</html>
