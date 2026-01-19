@@ -8,12 +8,33 @@
     const GITHUB_USER = "EyelessHairball";
     const REPO_NAME = "main";
     const BRANCH = "main";
-    const IGNORE_FOLDER = "random"; 
+    const IGNORE_FOLDER = "random";
 
     const apiUrl = `https://api.github.com/repos/${GITHUB_USER}/${REPO_NAME}/contents/?ref=${BRANCH}`;
 
+    const FALLBACK_PAGES = [
+      "https://fatrhabit.org/pcm/",
+      "https://fatrhabit.org/3jsvideo/",
+      "https://fatrhabit.org/directory/",
+      "https://sounds.fatrhabit.org/",
+      "https://images.fatrhabit.org/",
+      "https://fatrhabit.org/limbo/",
+      "https://fatrhabit.org/visualizer/",
+      "https://fatrhabit.org/draw/",
+      "https://fatrhabit.org/flappychud/",
+      "https://fatrhabit.org/getmotivated.mp4"
+    ];
+
+    function redirectToFallback() {
+      const choice = FALLBACK_PAGES[Math.floor(Math.random() * FALLBACK_PAGES.length)];
+      window.location.href = choice;
+    }
+
     fetch(apiUrl)
-      .then(res => res.json())
+      .then(res => {
+        if (!res.ok) throw new Error("GitHub API failed");
+        return res.json();
+      })
       .then(items => {
         const folders = items
           .filter(item =>
@@ -23,17 +44,16 @@
           .map(item => item.name);
 
         if (folders.length === 0) {
-          document.body.innerText = "No pages found.";
+          redirectToFallback();
           return;
         }
 
         const choice = folders[Math.floor(Math.random() * folders.length)];
-
         window.location.href = `/${choice}/`;
       })
-      
       .catch(err => {
         console.error(err);
+        redirectToFallback();
       });
   </script>
 </body>
