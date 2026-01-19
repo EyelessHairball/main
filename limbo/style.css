@@ -1,0 +1,52 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@900&display=swap');
+body {
+    height:100vh;
+    margin:0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:#000;
+    overflow:hidden;
+}
+.container {
+    width:40vh;
+    height:80vh;
+    position:absolute;
+    display:flex;
+    flex-wrap:wrap;
+    opacity:0;
+    scale:1.4;
+    transition:opacity .7s ease, scale .7s ease;
+}
+.container.show {
+    opacity:1;
+    scale:1;
+}
+.rotary-container {
+    position:absolute;
+    width:40vh;
+    height:40vh;
+    left:calc(50% - 20vh);
+    top:calc(50% - 20vh);
+}
+.key {
+    width:20vh;
+    height:20vh;
+    opacity:1;
+    transition:opacity .3s ease, filter .7s ease, transform .5s ease;
+    user-select:none;
+}
+.rotary-container > .key {
+    position:absolute;
+    left:calc(20vh + 20vmin * var(--x) - 10vh);
+    top:calc(20vh + 20vmin * var(--y) - 10vh);
+    opacity:1;
+}
+.rotary-container > .key:nth-child(1){--x:sqrt(.5);--y:calc(0 - sqrt(.5))}
+.rotary-container > .key:nth-child(2){--x:0;--y:-1}
+.rotary-container > .key:nth-child(3){--x:calc(0 - sqrt(.5));--y:calc(0 - sqrt(.5))}
+.rotary-container > .key:nth-child(4){--x:-1;--y:0}
+.rotary-container > .key:nth-child(5){--x:calc(0 - sqrt(.5));--y:sqrt(.5)}
+.rotary-container > .key:nth-child(6){--x:0;--y:1}
+.rotary-container > .key:nth-child(7){--x:sqrt(.5);--y:sqrt(.5)}
+.rotary-container > .key:nth-child(8){--x:1;--y:0}
