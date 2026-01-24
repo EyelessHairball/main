@@ -31,9 +31,8 @@ document.getElementById("volSlider").addEventListener("input", (e) => {
 function TOGGLE_MODE() {
   IS_BYTEBEAT = !IS_BYTEBEAT;
   SAMPLE_COUNTER = 0;
-  document.querySelector("button").innerText = IS_BYTEBEAT
-    ? "Mode: Bytebeat"
-    : "Mode: Float";
+  document.getElementById("modeButton").innerText =
+  IS_BYTEBEAT ? "Mode: Bytebeat" : "Mode: Float";
 }
 
 function RESIZE_CANVAS() {
@@ -159,5 +158,65 @@ function VISUALIZE() {
   }
   DRAW();
 }
+
+function LOAD_FROM_URL() {
+  const params = new URLSearchParams(window.location.search);
+  
+  if (params.has('eq')) {
+    const equation = decodeURIComponent(params.get('eq'));
+    document.getElementById("equation").value = equation;
+    USER_EQUATION = equation;
+  }
+  
+  if (params.has('mode')) {
+    const mode = params.get('mode');
+    if (mode === 'bytebeat') {
+      IS_BYTEBEAT = true;
+      document.querySelector("button").innerText = "Mode: Bytebeat";
+    }
+  }
+  
+  if (params.has('freq')) {
+    freq = parseFloat(params.get('freq'));
+    document.getElementById("freqSlider").value = freq;
+    document.getElementById("freqValue").textContent = freq;
+  }
+  
+  if (params.has('vol')) {
+    VOLUME = parseFloat(params.get('vol'));
+    document.getElementById("volSlider").value = VOLUME;
+    document.getElementById("volValue").textContent = VOLUME.toFixed(2);
+  }
+  
+  if (params.has('color')) {
+    const color = '#' + params.get('color');
+    WAVE_COLOR_PICKER.value = color;
+  }
+}
+
+function SAVE_LINK() {
+  const equation = document.getElementById("equation").value;
+  const mode = IS_BYTEBEAT ? 'bytebeat' : 'float';
+  const color = WAVE_COLOR_PICKER.value.substring(1);
+  
+  const params = new URLSearchParams({
+    eq: equation,
+    mode: mode,
+    freq: freq,
+    vol: VOLUME,
+    color: color
+  });
+  
+  const url = window.location.origin + window.location.pathname + '?' + params.toString();
+  
+  navigator.clipboard.writeText(url).then(() => {
+    alert('Link copied to clipboard!');
+  }).catch(() => {
+    prompt('Couldnt copy to clipboard, copy this link:', url);
+  });
+}
+
+LOAD_FROM_URL();
+
 
 window.addEventListener("resize", RESIZE_CANVAS);
