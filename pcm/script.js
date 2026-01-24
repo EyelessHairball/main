@@ -217,7 +217,13 @@ function SAVE_LINK() {
   });
 }
 
+function RANDOMIZE_EQ() {
+  const vars = ["t"];
+  const nums = ["1", "2", "4", "8", "16", "32"];
+  const ops = ["+", "-", "*", "^", "&", "|", "<<", ">>"];
+  const funcs = ["Math.sin", "Math.cos", "Math.tan"];
+  // for later...
+}
+
 LOAD_FROM_URL();
-
-
 window.addEventListener("resize", RESIZE_CANVAS);
