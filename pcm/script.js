@@ -217,6 +217,14 @@ function SAVE_LINK() {
   });
 }
 
+function rand(arr) {
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
+function chance(p = 0.5) {
+  return Math.random() < p;
+}
+
 function RANDOMIZE_EQ() {
   const vars = ["t"];
   const nums = ["1", "2", "4", "8", "16", "32"];
