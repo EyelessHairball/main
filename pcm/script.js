@@ -206,11 +206,12 @@ function SAVE_LINK() {
     vol: VOLUME,
     color: color
   });
-  
+   
   const url = window.location.origin + window.location.pathname + '?' + params.toString();
   
   navigator.clipboard.writeText(url).then(() => {
     // its empty here
+    console.log("copied to clipboard");
   }).catch(() => {
     prompt('Couldnt copy to clipboard, copy this link:', url);
   });
