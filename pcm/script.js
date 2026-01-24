@@ -210,7 +210,7 @@ function SAVE_LINK() {
   const url = window.location.origin + window.location.pathname + '?' + params.toString();
   
   navigator.clipboard.writeText(url).then(() => {
-    alert('Link copied to clipboard!');
+    // its empty here
   }).catch(() => {
     prompt('Couldnt copy to clipboard, copy this link:', url);
   });
