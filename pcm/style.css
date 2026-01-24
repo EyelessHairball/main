@@ -70,8 +70,9 @@ button {
   border-radius: 8px;
   cursor: pointer;
 }
+
 button:hover {
-  background: #0c0;
+  outline: 3px solid white;
 }
 
 #oscilloscope {
