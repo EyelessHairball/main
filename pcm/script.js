@@ -163,7 +163,7 @@ function LOAD_FROM_URL() {
   const params = new URLSearchParams(window.location.search);
   
   if (params.has('eq')) {
-    const equation = decodeURIComponent(params.get('eq'));
+    const equation = params.get('eq');
     document.getElementById("equation").value = equation;
     USER_EQUATION = equation;
   }
