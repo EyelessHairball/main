@@ -226,11 +226,41 @@ function chance(p = 0.5) {
 }
 
 function RANDOMIZE_EQ() {
-  const vars = ["t"];
+  const vars = ["t", "freq"];
   const nums = ["1", "2", "4", "8", "16", "32"];
-  const ops = ["+", "-", "*", "^", "&", "|", "<<", ">>"];
+  const ops = ["+", "-", "*", "/", "%", "^", "&", "|", "<<", ">>"];
   const funcs = ["Math.sin", "Math.cos", "Math.tan"];
-  // for later...
+
+  function atom() {
+    if (chance(0.4)) return rand(nums);
+    if (chance(0.5)) return rand(vars);
+    return `${rand(funcs)}(${rand(vars)}${chance(0.3) ? "*" + rand(nums) : ""})`;
+  }
+
+  function expr(depth = 0) {
+    if (depth > 2 || chance(0.4)) {
+      return atom();
+    }
+
+    const left = expr(depth + 1);
+    const right = expr(depth + 1);
+    const op = rand(ops);
+
+    return `(${left} ${op} ${right})`;
+  }
+
+  let eq = expr();
+
+  eq = `(${eq}) * 0.5`;
+
+  document.getElementById("equation").value = eq;
+
+  try {
+    WAVE_FUNC = new Function("t", "freq", `return ${eq};`);
+  } catch (e) {
+    console.warn("Bad equation, retrying...");
+    RANDOMIZE_EQ();
+  }
 }
 
 LOAD_FROM_URL();
