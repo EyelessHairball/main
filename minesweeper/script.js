@@ -49,7 +49,7 @@
     #game {
       background: #bdbdbd;
       padding: 8px;
-      border: 3px solid #7b7b7b;
+      border: 3px outset #a8a8a8;
     }
 
     #top {
@@ -57,7 +57,7 @@
       justify-content: space-between;
       padding: 4px;
       margin-bottom: 6px;
-      background: #c0c0c0;
+      background: #909090;
       border: 2px inset #7b7b7b;
     }
 
