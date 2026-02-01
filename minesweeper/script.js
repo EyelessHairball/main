@@ -4,6 +4,17 @@
   const MINES = 32;
   const TILE_SIZE = 32;
 
+  const BAD_APPLE = new URLSearchParams(location.search).has("badapple");
+  const BAD_APPLE_URL =
+    "https://raw.githubusercontent.com/EyelessHairball/main/refs/heads/main/minesweeper/badapple/bad-apple.mp4";
+
+  const faces = {
+    smile:
+      "https://raw.githubusercontent.com/EyelessHairball/images/main/minesweeper/face-smile.png",
+    frown:
+      "https://raw.githubusercontent.com/EyelessHairball/images/main/minesweeper/face-frown.png"
+  };
+
   const sprites = {
     unknown:
       "https://raw.githubusercontent.com/EyelessHairball/images/main/minesweeper/TileUnknown.png",
@@ -15,6 +26,7 @@
       "https://raw.githubusercontent.com/EyelessHairball/images/main/minesweeper/TileFlag.png",
     mine:
       "https://raw.githubusercontent.com/EyelessHairball/images/main/minesweeper/TileMine.png",
+
     numbers: [
       null,
       "https://raw.githubusercontent.com/EyelessHairball/images/main/minesweeper/Tile1.png",
@@ -34,6 +46,30 @@
       font-family: "Minesweeper";
       src: url("https://raw.githubusercontent.com/EyelessHairball/main/refs/heads/main/assets/fonts/minesweeper.otf");
     }
+    
+   #face-btn {
+    width: 32px;
+    height: 32px;
+    background: #bdbdbd;
+    border: 2px outset #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2px;
+    cursor: pointer;
+  }
+
+  #face-btn:active {
+    border: 2px inset #fff;
+  }
+
+  #face-btn img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    image-rendering: pixelated;
+  }
+
 
     body {
       margin: 0;
@@ -95,7 +131,16 @@
   const timerEl = document.createElement("div");
   timerEl.className = "counter";
 
-  top.append(mineCounterEl, timerEl);
+  const faceBtn = document.createElement("div");
+  faceBtn.id = "face-btn";
+
+  const faceImg = document.createElement("img");
+  faceImg.src = faces.smile;
+
+  faceBtn.appendChild(faceImg);
+  faceBtn.addEventListener("click", createBoard);
+
+  top.append(mineCounterEl, faceBtn, timerEl);
 
   const boardEl = document.createElement("div");
   boardEl.id = "board";
@@ -111,11 +156,13 @@
   let time = 0;
   let timerInterval = null;
 
-  const pad = (n) => n.toString().padStart(3, "0");
+  const pad = (n) => {
+    const sign = n < 0 ? "-" : "";
+    return sign + Math.abs(n).toString().padStart(3, "0");
+  };
 
   function startTimer() {
     if (timerInterval) return;
-
     started = true;
     timerInterval = setInterval(() => {
       if (time < 999) {
@@ -127,9 +174,11 @@
 
   function stopTimer() {
     clearInterval(timerInterval);
+    timerInterval = null;
   }
 
   function createBoard() {
+    faceImg.src = faces.smile;
     stopTimer();
 
     board = [];
@@ -157,7 +206,44 @@
           img
         };
 
-        img.addEventListener("click", () => reveal(r, c));
+        img.addEventListener("mousedown", (e) => {
+          if (gameOver || e.button !== 0) return;
+
+          const cell = board[r][c];
+
+          if (cell.revealed && cell.adjacent > 0) {
+            let flagCount = 0;
+
+            for (let dr = -1; dr <= 1; dr++) {
+              for (let dc = -1; dc <= 1; dc++) {
+                const nr = r + dr;
+                const nc = c + dc;
+                if (nr >= 0 && nr < ROWS && nc >= 0 && nc < COLS) {
+                  if (board[nr][nc].flagged) flagCount++;
+                }
+              }
+            }
+
+            if (flagCount === cell.adjacent) {
+              for (let dr = -1; dr <= 1; dr++) {
+                for (let dc = -1; dc <= 1; dc++) {
+                  const nr = r + dr;
+                  const nc = c + dc;
+                  if (nr >= 0 && nr < ROWS && nc >= 0 && nc < COLS) {
+                    reveal(nr, nc);
+                  }
+                }
+              }
+            }
+
+            return;
+          }
+
+          if (!cell.revealed && !cell.flagged) {
+            reveal(r, c);
+          }
+        });
+
         img.addEventListener("contextmenu", (e) => {
           e.preventDefault();
           toggleFlag(r, c);
@@ -170,6 +256,8 @@
 
     placeMines();
     calculateNumbers();
+
+    if (BAD_APPLE) startBadApple();
   }
 
   function placeMines() {
@@ -214,7 +302,7 @@
 
     if (cell.mine) {
       cell.img.src = sprites.exploded;
-      endGame(false);
+      endGame();
       return;
     }
 
@@ -254,41 +342,8 @@
     mineCounterEl.textContent = pad(MINES - flags);
   }
 
-  boardEl.addEventListener("mousedown", (e) => {
-    if (e.button !== 0) return;
-    const index = [...boardEl.children].indexOf(e.target);
-    if (index < 0) return;
-
-    const r = Math.floor(index / COLS);
-    const c = index % COLS;
-    const cell = board[r][c];
-    if (!cell.revealed || cell.adjacent === 0) return;
-
-    let flagCount = 0;
-    for (let dr = -1; dr <= 1; dr++) {
-      for (let dc = -1; dc <= 1; dc++) {
-        const nr = r + dr;
-        const nc = c + dc;
-        if (nr >= 0 && nr < ROWS && nc >= 0 && nc < COLS) {
-          if (board[nr][nc].flagged) flagCount++;
-        }
-      }
-    }
-
-    if (flagCount === cell.adjacent) {
-      for (let dr = -1; dr <= 1; dr++) {
-        for (let dc = -1; dc <= 1; dc++) {
-          const nr = r + dr;
-          const nc = c + dc;
-          if (nr >= 0 && nr < ROWS && nc >= 0 && nc < COLS) {
-            reveal(nr, nc);
-          }
-        }
-      }
-    }
-  });
-
   function endGame() {
+    faceImg.src = faces.frown;
     gameOver = true;
     stopTimer();
     for (let r = 0; r < ROWS; r++) {
@@ -304,6 +359,37 @@
     if (revealed === ROWS * COLS - MINES) {
       endGame();
     }
+  }
+
+  function startBadApple() {
+    const video = document.createElement("video");
+    video.src = BAD_APPLE_URL;
+    video.muted = true;
+    video.play();
+
+    const canvas = document.createElement("canvas");
+    canvas.width = COLS;
+    canvas.height = ROWS;
+    const ctx = canvas.getContext("2d");
+
+    function render() {
+      if (video.paused || video.ended) return;
+      ctx.drawImage(video, 0, 0, COLS, ROWS);
+      const data = ctx.getImageData(0, 0, COLS, ROWS).data;
+
+      for (let r = 0; r < ROWS; r++) {
+        for (let c = 0; c < COLS; c++) {
+          const i = (r * COLS + c) * 4;
+          const brightness = data[i] + data[i + 1] + data[i + 2];
+          board[r][c].img.src =
+            brightness < 384 ? sprites.flag : sprites.unknown;
+        }
+      }
+
+      requestAnimationFrame(render);
+    }
+
+    render();
   }
 
   document.addEventListener("keydown", (e) => {
