@@ -138,7 +138,10 @@
   faceImg.src = faces.smile;
 
   faceBtn.appendChild(faceImg);
-  faceBtn.addEventListener("click", createBoard);
+  faceBtn.addEventListener("click", () => {
+    createBoard();
+    if (BAD_APPLE) startBadApple();
+  });
 
   top.append(mineCounterEl, faceBtn, timerEl);
 
@@ -256,8 +259,6 @@
 
     placeMines();
     calculateNumbers();
-
-    if (BAD_APPLE) startBadApple();
   }
 
   function placeMines() {
@@ -365,7 +366,7 @@
     const video = document.createElement("video");
     video.crossOrigin = "anonymous";
     video.src = BAD_APPLE_URL;
-    video.muted = true;
+    video.muted = false;
     video.play();
 
     const canvas = document.createElement("canvas");
