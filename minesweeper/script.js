@@ -363,6 +363,7 @@
 
   function startBadApple() {
     const video = document.createElement("video");
+    video.crossOrigin = "anonymous";
     video.src = BAD_APPLE_URL;
     video.muted = true;
     video.play();
