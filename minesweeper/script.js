@@ -70,6 +70,17 @@
     image-rendering: pixelated;
   }
 
+  img {
+  -moz-user-select: none !important;
+  -khtml-user-select: none !important;
+  -webkit-user-select: none !important;
+  user-select: none !important;
+  -moz-user-drag: none !important;
+  -khtml-user-drag: none !important;
+  -webkit-user-drag: none !important;
+  user-drag: none !important;
+  }
+
 
     body {
       margin: 0;
