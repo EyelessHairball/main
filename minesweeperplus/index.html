@@ -72,34 +72,36 @@ fileInput.addEventListener("change", async (event) => {
 });
 
 async function startGame() {
-
     const pckBlob = uploadedFiles["index.pck"];
     const wasmBlob = uploadedFiles["index.wasm"];
 
     const pckURL = URL.createObjectURL(pckBlob);
     const wasmURL = URL.createObjectURL(wasmBlob);
 
+    uploadContainer.style.display = "none";
+    canvas.style.display = "block";
+
     const GODOT_CONFIG = {
         args: [],
         canvasResizePolicy: 2,
         executable: "index",
-        fileSizes: {},
-        focusCanvas: true,
-        gdextensionLibs: [],
-        wasm: wasmURL,
-        mainPack: pckURL
+        mainPack: pckURL,
+        locateFile: function(path) {
+            if (path.endsWith(".wasm")) {
+                return wasmURL;
+            }
+            return path;
+        }
     };
 
     const engine = new Engine(GODOT_CONFIG);
-
-    uploadContainer.style.display = "none";
-    canvas.style.display = "block";
 
     engine.startGame().catch(err => {
         console.error(err);
         alert("Failed to start game.");
     });
 }
+
 </script>
 
 </body>
